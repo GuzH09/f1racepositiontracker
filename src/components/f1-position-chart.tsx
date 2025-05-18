@@ -88,7 +88,7 @@ export function F1PositionChart({ year, round, teamColors = {} }: { year: string
           });
         });
 
-        // 2) Paginated laps (throttled)
+        // 2) Paginated laps (fast)
         const limit = 100;
         const initRes = await fetch(`/api/laps/${year}/${round}?limit=${limit}`);
         const initJson = await initRes.json();
@@ -100,8 +100,6 @@ export function F1PositionChart({ year, round, teamColors = {} }: { year: string
           const res = await fetch(`/api/laps/${year}/${round}?limit=${limit}&offset=${offset}`);
           const data = await res.json();
           allLaps.push(...(data.MRData.RaceTable.Races[0]?.Laps || []));
-          // pause to avoid rate limits: max ~3 requests/sec
-          await new Promise((resolve) => setTimeout(resolve, 300));
         }
 
         // flatten each Timing into rawRecords using codeMap
