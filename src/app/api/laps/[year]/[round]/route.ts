@@ -1,9 +1,9 @@
 export const revalidate = 604800;
 
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function GET(request: Request, { params }: { params: { year: string; round: string } }) {
-  const { year, round } = await params;
+export async function GET(request: NextRequest, context: { params: Promise<{ year: string; round: string }> }) {
+  const { year, round } = await context.params;
   const { searchParams } = new URL(request.url);
   const limit = searchParams.get("limit") || "100";
   const offset = searchParams.get("offset");
