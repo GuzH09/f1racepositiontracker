@@ -269,7 +269,8 @@ export function F1PositionChart({
             Track the positions of drivers throughout the race.
           </CardDescription>
         </div>
-        <div className="">
+        <div className="flex flex-col gap-2 items-end">
+          {/* Lap range selector */}
           <Select value={selectedRange} onValueChange={setSelectedRange}>
             <SelectTrigger size="sm" className="w-fit">
               <SelectValue placeholder="All" />
@@ -279,6 +280,32 @@ export function F1PositionChart({
               <SelectItem value="Second third">Second third</SelectItem>
               <SelectItem value="Last third">Last third</SelectItem>
               <SelectItem value="All">All</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Driver selector */}
+          <Select
+            value={hoveredDriver || "All"}
+            onValueChange={(val: string) =>
+              setHoveredDriver(val === "All" ? null : val)
+            }
+          >
+            <SelectTrigger size="sm" className="w-fit">
+              <SelectValue placeholder="All Drivers" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              {Object.keys(config)
+                .sort((a, b) =>
+                  (config[a].label as string).localeCompare(
+                    config[b].label as string
+                  )
+                )
+                .map((drv) => (
+                  <SelectItem key={drv} value={drv}>
+                    {config[drv].label}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
