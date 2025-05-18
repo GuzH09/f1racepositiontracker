@@ -1,206 +1,319 @@
-"use client"
-import type React from "react"
-import { useEffect, useState, useRef } from "react"
-import { Line, LineChart, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+"use client";
+import type React from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
+import {
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  LabelList,
+} from "recharts";
+import { Loader2 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
-export function F1PositionChart() {
-  // const [processedData, setProcessedData] = useState([])
-  // const [drivers, setDrivers] = useState({})
-  // const [config, setConfig] = useState({})
-  const [totalLaps, setTotalLaps] = useState(0)
-  // const [hoveredDriver, setHoveredDriver] = useState(null)
-  // const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
-  // const chartRef = useRef<HTMLDivElement>(null)
+// Assign colors for drivers
+const colors = [
+  "#FF3838",
+  "#3866FF",
+  "#38FF38",
+  "#FF38FF",
+  "#FFFF38",
+  "#38FFFF",
+  "#FF9C38",
+  "#9C38FF",
+  "#FF3899",
+  "#38FF9C",
+  "#9CFF38",
+  "#389CFF",
+  "#FF6B38",
+  "#6B38FF",
+  "#38FF6B",
+  "#FF38D4",
+  "#D438FF",
+  "#38D4FF",
+  "#FFD438",
+  "#D4FF38",
+];
 
-  // const processData = () => {
-  //   // Extract lap data
-  //   const laps = lapData.MRData.RaceTable.Races[0]?.Laps || []
-  //   setTotalLaps(laps.length)
+export function F1PositionChart({
+  year,
+  round,
+}: {
+  year: string;
+  round: string;
+}) {
+  const [chartData, setChartData] = useState<
+    ({ lap: number; times: Record<string, string> } & Record<string, number>)[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [config, setConfig] = useState<
+    Record<string, { label: string; color: string }>
+  >({});
+  const [hoveredDriver, setHoveredDriver] = useState<string | null>(null);
 
-  //   // Extract qualifying data to get driver info and starting positions
-  //   const qualifyingResults = qualifyingData.MRData.RaceTable.Races[0]?.QualifyingResults || []
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      if (!year || !round) return;
+      try {
+        // 1) Qualifying for Lap 0
+        const qRes = await fetch(
+          `https://api.jolpi.ca/ergast/f1/${year}/${round}/qualifying/`
+        );
+        const qJson = await qRes.json();
+        const qualifying =
+          qJson.MRData.RaceTable.Races[0]?.QualifyingResults || [];
 
-  //   // Create a map of driver IDs to their info
-  //   const driverMap: Record<string, DriverInfo> = {}
+        // build initial raw array: map driverId to code, track colors
+        const codeMap: Record<string, string> = {};
+        const colorMap: Record<string, string> = {};
+        const rawRecords: {
+          driver: string;
+          lap: number;
+          position: number;
+          time: string;
+        }[] = [];
+        qualifying.forEach((r: any, i: number) => {
+          const id = r.Driver.driverId;
+          const code = r.Driver.code;
+          // store mapping and color
+          codeMap[id] = code;
+          colorMap[code] = colors[i % colors.length];
+          // starting position (Lap 0)
+          rawRecords.push({
+            driver: code,
+            lap: 0,
+            position: parseInt(r.position, 10),
+            time: "",
+          });
+        });
 
-  //   // Define a set of distinct colors for the drivers
-  //   const colors = [
-  //     "#FF3838", // Red
-  //     "#3866FF", // Blue
-  //     "#38FF38", // Green
-  //     "#FF38FF", // Magenta
-  //     "#FFFF38", // Yellow
-  //     "#38FFFF", // Cyan
-  //     "#FF9C38", // Orange
-  //     "#9C38FF", // Purple
-  //     "#FF3899", // Pink
-  //     "#38FF9C", // Mint
-  //     "#9CFF38", // Lime
-  //     "#389CFF", // Sky Blue
-  //     "#FF6B38", // Coral
-  //     "#6B38FF", // Indigo
-  //     "#38FF6B", // Light Green
-  //     "#FF38D4", // Hot Pink
-  //     "#D438FF", // Violet
-  //     "#38D4FF", // Light Blue
-  //     "#FFD438", // Gold
-  //     "#D4FF38", // Chartreuse
-  //   ]
+        // 2) Paginated laps (throttled)
+        const limit = 100;
+        const initRes = await fetch(
+          `https://api.jolpi.ca/ergast/f1/${year}/${round}/laps/?limit=${limit}`
+        );
+        const initJson = await initRes.json();
+        const total = parseInt(initJson.MRData.total, 10);
+        const pages = Math.ceil(total / limit);
+        const allLaps: any[] = [];
+        for (let i = 0; i < pages; i++) {
+          const offset = i * limit;
+          const res = await fetch(
+            `https://api.jolpi.ca/ergast/f1/${year}/${round}/laps/?limit=${limit}&offset=${offset}`
+          );
+          const data = await res.json();
+          allLaps.push(...(data.MRData.RaceTable.Races[0]?.Laps || []));
+          // pause to avoid rate limits: max ~3 requests/sec
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
 
-  //   // Populate driver map from qualifying data
-  //   qualifyingResults.forEach((result, index) => {
-  //     const driverId = result.Driver.driverId
-  //     driverMap[driverId] = {
-  //       code: result.Driver.code,
-  //       name: `${result.Driver.givenName} ${result.Driver.familyName}`,
-  //       constructor: result.Constructor.name,
-  //       color: colors[index % colors.length],
-  //     }
-  //   })
+        // flatten each Timing into rawRecords using codeMap
+        allLaps.forEach((lap) => {
+          const lapNum = parseInt(lap.number, 10);
+          lap.Timings.forEach((t: any) => {
+            const code = codeMap[t.driverId] || t.driverId;
+            rawRecords.push({
+              driver: code,
+              lap: lapNum,
+              position: parseInt(t.position, 10),
+              time: t.time,
+            });
+          });
+        });
 
-  //   // Create processed data for the chart
-  //   const processed: ProcessedData[] = []
+        // pivot into chart-compatible
+        const laps = Array.from(new Set(rawRecords.map((r) => r.lap)))
+          .sort((a, b) => a - b)
+          .map((lapNum) => {
+            const byLap = rawRecords.filter((r) => r.lap === lapNum);
+            const entry: any = { lap: lapNum, times: {} };
+            byLap.forEach((r) => {
+              entry[r.driver] = r.position;
+              entry.times[r.driver] = r.time;
+            });
+            return entry;
+          });
 
-  //   // Create "Lap 0" from qualifying data
-  //   const lapZero: ProcessedData = { lap: 0 }
-  //   qualifyingResults.forEach((result) => {
-  //     const driverId = result.Driver.driverId
-  //     lapZero[driverId] = Number.parseInt(result.position)
-  //   })
+        setChartData(laps);
 
-  //   // Add Lap 0 to the beginning of the processed data
-  //   processed.unshift(lapZero)
+        // build config using codes and colors
+        const cfg: Record<string, { label: string; color: string }> = {};
+        const drivers = Object.keys(laps[0] || {}).filter(
+          (k) => k !== "lap" && k !== "times"
+        );
+        drivers.forEach((code) => {
+          cfg[code] = { label: code, color: colorMap[code] };
+        });
+        setConfig(cfg);
+        setLoading(false);
+      } catch (e) {
+        setLoading(false);
+        console.error("Error loading chart data", e);
+      }
+    }
+    loadData();
+  }, [year, round]);
 
-  //   laps.forEach((lap) => {
-  //     const lapNumber = Number.parseInt(lap.number)
-  //     const lapData: ProcessedData = { lap: lapNumber }
+  // determine last lap per driver for retirement markers
+  const retireLaps = useMemo(() => {
+    const rl: Record<string, number> = {};
+    chartData.forEach((entry) => {
+      Object.keys(entry).forEach((key) => {
+        if (key !== "lap" && key !== "times" && entry[key] != null) {
+          rl[key] = entry.lap;
+        }
+      });
+    });
+    return rl;
+  }, [chartData]);
 
-  //     lap.Timings.forEach((timing) => {
-  //       const driverId = timing.driverId
-  //       lapData[driverId] = Number.parseInt(timing.position)
-  //     })
+  // custom dot: larger for retirement, smaller otherwise
+  const CustomDot = (props: any) => {
+    const { cx, cy, payload, dataKey } = props;
+    const isRetire = retireLaps[dataKey] === payload.lap;
+    return (
+      <circle
+        cx={cx}
+        cy={cy}
+        r={isRetire ? 6 : 0}
+        fill={config[dataKey].color}
+        stroke="white"
+        strokeWidth={isRetire ? 2 : 0}
+      />
+    );
+  };
 
-  //     processed.push(lapData)
-  //   })
+  // Tooltip showing lap times
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    const lapEntry = chartData.find((d) => d.lap === label);
+    // show only hovered driver if hovering, else all
+    const dataToShow = hoveredDriver
+      ? payload.filter((pld: any) => pld.dataKey === hoveredDriver)
+      : payload;
+    return (
+      <div className="bg-background border p-2 shadow-lg">
+        <p className="font-medium">Lap {label}</p>
+        {dataToShow.map((pld: any) => {
+          const drv = pld.dataKey;
+          const pos = pld.value;
+          const time = lapEntry?.times[drv] || "";
+          return (
+            <div key={drv} className="flex items-center gap-2">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ background: pld.color }}
+              />
+              <span>
+                {drv}: P{pos}
+              </span>
+              <small className="text-xs text-muted-foreground">{time}</small>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
-  //   // Create chart config
-  //   const chartConfig: Record<string, { label: string; color: string }> = {}
-  //   Object.entries(driverMap).forEach(([driverId, info]) => {
-  //     chartConfig[driverId] = {
-  //       label: `${info.code} (${info.constructor})`,
-  //       color: info.color,
-  //     }
-  //   })
-
-  //   setProcessedData(processed)
-  //   setDrivers(driverMap)
-  //   setConfig(chartConfig)
-  // }
+  // Determine first and last lap for label positioning
+  const minLap = chartData[0]?.lap;
+  const maxLap = chartData[chartData.length - 1]?.lap;
 
   return (
-    <>
-      <h3 className="text-xl font-semibold">Driver Positions by Lap</h3>
-      <p className="text-sm text-gray-600">Total laps: {totalLaps} (Lap 0 = Starting Position)</p>
-
-      {/* <div className="h-[600px] relative" ref={chartRef} onMouseMove={handleMouseMove}>
-        {hoveredDriver && (
-          <div
-            className="absolute z-50 bg-white px-3 py-2 rounded-md shadow-md border pointer-events-none"
-            style={{
-              left: tooltipPosition.x + 10,
-              top: tooltipPosition.y - 40,
-              borderColor: drivers[hoveredDriver]?.color || "#ccc",
-              borderLeftWidth: "4px",
-            }}
-          >
-            <div className="font-medium">{drivers[hoveredDriver]?.code}</div>
-            <div className="text-sm">{drivers[hoveredDriver]?.name}</div>
-            <div className="text-xs text-gray-600">{drivers[hoveredDriver]?.constructor}</div>
+    <Card className="py-4">
+      <CardHeader>
+        <CardTitle>Driver Positions by Lap</CardTitle>
+        <CardDescription>
+          Track the positions of drivers throughout the race.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="flex min-h-[66dvh] items-center justify-center">
+            <Loader2 className="animate-spin h-8 w-8 text-muted-foreground" />
           </div>
-        )}
-        <ChartContainer config={config} className="h-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={processedData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="lap"
-                label={{ value: "Lap Number", position: "insideBottomRight", offset: -5 }}
-                // Add ticks at regular intervals for better readability with many laps
-                ticks={[
-                  0,
-                  ...Array.from({ length: Math.min(9, totalLaps) }, (_, i) =>
-                    Math.round((i + 1) * (totalLaps / Math.min(9, totalLaps))),
-                  ),
-                ]}
-              />
-              <YAxis
-                domain={[1, 20]}
-                reversed={true}
-                label={{ value: "Position", angle: -90, position: "insideLeft" }}
-                ticks={[1, 5, 10, 15, 20]}
-              />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    formatter={(value, name) => {
-                      const driverId = name as string
-                      const driver = drivers[driverId]
-                      if (driver) {
-                        return [`Position: ${value}`, `${driver.code} - ${driver.name} (${driver.constructor})`]
-                      }
-                      return [`Position: ${value}`, driverId]
+        ) : (
+          <ChartContainer
+            config={config}
+            className="min-h-[60dvh] max-h-[66dvh] w-full"
+          >
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3" />
+              <XAxis dataKey="lap" padding={{ left: 2, right: 2 }} />
+              <YAxis domain={[1, 20]} reversed={true} hide={true} />
+              <ChartTooltip content={<CustomTooltip />} />
+              <Legend verticalAlign="top" height={30} />
+              {Object.keys(config).map((drv) => (
+                <Line
+                  key={drv}
+                  type="monotone"
+                  dataKey={drv}
+                  stroke={config[drv].color}
+                  strokeWidth={4}
+                  activeDot={false}
+                  dot={(dotProps) => {
+                    const { key, ...rest } = dotProps;
+                    return <CustomDot key={key} {...rest} />;
+                  }}
+                  // Set hovered to the driver or opposite of hovered
+                  onClick={() =>
+                    setHoveredDriver(hoveredDriver === drv ? null : drv)
+                  }
+                  opacity={hoveredDriver && hoveredDriver !== drv ? 0.2 : 1}
+                >
+                  <LabelList
+                    content={(props: any) => {
+                      const lap = chartData[props.index]?.lap;
+                      if (lap !== minLap) return null;
+                      return (
+                        <text
+                          x={(props.x ?? 0) - 8}
+                          y={props.y ?? 0}
+                          fill={config[drv].color}
+                          textAnchor="end"
+                        >
+                          {config[drv].label}
+                        </text>
+                      );
                     }}
                   />
-                }
-              />
-              <Legend />
-              {Object.keys(drivers).map((driverId) => (
-                <Line
-                  key={driverId}
-                  type="monotone"
-                  dataKey={driverId}
-                  name={driverId}
-                  stroke={drivers[driverId].color}
-                  strokeWidth={2}
-                  // Reduce dot size for better performance with many laps
-                  dot={{ r: totalLaps > 30 ? 0 : 2 }}
-                  // Enhanced active dot for better hover visibility
-                  activeDot={{
-                    r: 6,
-                    stroke: "#fff",
-                    strokeWidth: 2,
-                    fill: drivers[driverId].color,
-                  }}
-                  connectNulls={true}
-                  onMouseEnter={() => setHoveredDriver(driverId)}
-                  onMouseLeave={() => setHoveredDriver(null)}
-                  className="hover:cursor-pointer"
-                />
+                  <LabelList
+                    content={(props: any) => {
+                      const lap = chartData[props.index]?.lap;
+                      if (lap !== maxLap) return null;
+                      return (
+                        <text
+                          x={(props.x ?? 0) + 8}
+                          y={props.y ?? 0}
+                          fill={config[drv].color}
+                          textAnchor="start"
+                        >
+                          {config[drv].label}
+                        </text>
+                      );
+                    }}
+                  />
+                </Line>
               ))}
             </LineChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-      </div> */}
-
-      {/* <div className="mt-4">
-        <h3 className="text-lg font-medium mb-2">Driver Legend</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {Object.entries(drivers).map(([driverId, info]) => (
-            <div
-              key={driverId}
-              className="flex items-center gap-2 p-1 rounded hover:bg-gray-100 cursor-pointer"
-              onMouseEnter={() => setHoveredDriver(driverId)}
-              onMouseLeave={() => setHoveredDriver(null)}
-            >
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: info.color }}></div>
-              <span className="text-sm">
-                {info.code} - {info.name}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div> */}
-    </>
-  )
+          </ChartContainer>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
