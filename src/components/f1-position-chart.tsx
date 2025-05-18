@@ -1,36 +1,11 @@
 "use client";
 import type React from "react";
 import { useEffect, useState, useRef, useMemo } from "react";
-import {
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  LabelList,
-} from "recharts";
+import { Line, LineChart, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, LabelList } from "recharts";
 import { Loader2 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 // Assign colors for drivers
 const colors = [
@@ -56,22 +31,10 @@ const colors = [
   "#D4FF38",
 ];
 
-export function F1PositionChart({
-  year,
-  round,
-  teamColors = {},
-}: {
-  year: string;
-  round: string;
-  teamColors?: Record<string, string>;
-}) {
-  const [chartData, setChartData] = useState<
-    ({ lap: number; times: Record<string, string> } & Record<string, number>)[]
-  >([]);
+export function F1PositionChart({ year, round, teamColors = {} }: { year: string; round: string; teamColors?: Record<string, string> }) {
+  const [chartData, setChartData] = useState<({ lap: number; times: Record<string, string> } & Record<string, number>)[]>([]);
   const [loading, setLoading] = useState(true);
-  const [config, setConfig] = useState<
-    Record<string, { label: string; color: string }>
-  >({});
+  const [config, setConfig] = useState<Record<string, { label: string; color: string }>>({});
   const [hoveredDriver, setHoveredDriver] = useState<string | null>(null);
   const [selectedRange, setSelectedRange] = useState<string>("All");
   const displayedData = useMemo(() => {
@@ -98,8 +61,7 @@ export function F1PositionChart({
         // 1) Qualifying for Lap 0
         const qRes = await fetch(`/api/qualifying/${year}/${round}`);
         const qJson = await qRes.json();
-        const qualifying =
-          qJson.MRData.RaceTable.Races[0]?.QualifyingResults || [];
+        const qualifying = qJson.MRData.RaceTable.Races[0]?.QualifyingResults || [];
 
         // build initial raw array: map driverId to code, track colors
         const codeMap: Record<string, string> = {};
@@ -128,18 +90,14 @@ export function F1PositionChart({
 
         // 2) Paginated laps (throttled)
         const limit = 100;
-        const initRes = await fetch(
-          `/api/laps/${year}/${round}?limit=${limit}`
-        );
+        const initRes = await fetch(`/api/laps/${year}/${round}?limit=${limit}`);
         const initJson = await initRes.json();
         const total = parseInt(initJson.MRData.total, 10);
         const pages = Math.ceil(total / limit);
         const allLaps: any[] = [];
         for (let i = 0; i < pages; i++) {
           const offset = i * limit;
-          const res = await fetch(
-            `/api/laps/${year}/${round}?limit=${limit}&offset=${offset}`
-          );
+          const res = await fetch(`/api/laps/${year}/${round}?limit=${limit}&offset=${offset}`);
           const data = await res.json();
           allLaps.push(...(data.MRData.RaceTable.Races[0]?.Laps || []));
           // pause to avoid rate limits: max ~3 requests/sec
@@ -177,9 +135,7 @@ export function F1PositionChart({
 
         // build config using codes and colors
         const cfg: Record<string, { label: string; color: string }> = {};
-        const drivers = Object.keys(laps[0] || {}).filter(
-          (k) => k !== "lap" && k !== "times"
-        );
+        const drivers = Object.keys(laps[0] || {}).filter((k) => k !== "lap" && k !== "times");
         drivers.forEach((code) => {
           cfg[code] = { label: code, color: colorMap[code] };
         });
@@ -210,16 +166,7 @@ export function F1PositionChart({
   const CustomDot = (props: any) => {
     const { cx, cy, payload, dataKey } = props;
     const isRetire = retireLaps[dataKey] === payload.lap;
-    return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={isRetire ? 6 : 0}
-        fill={config[dataKey].color}
-        stroke="white"
-        strokeWidth={isRetire ? 2 : 0}
-      />
-    );
+    return <circle cx={cx} cy={cy} r={isRetire ? 6 : 0} fill={config[dataKey].color} stroke="white" strokeWidth={isRetire ? 2 : 0} />;
   };
 
   // Tooltip showing lap times
@@ -227,9 +174,7 @@ export function F1PositionChart({
     if (!active || !payload?.length) return null;
     const lapEntry = chartData.find((d) => d.lap === label);
     // show only hovered driver if hovering, else all
-    const dataToShow = hoveredDriver
-      ? payload.filter((pld: any) => pld.dataKey === hoveredDriver)
-      : payload;
+    const dataToShow = hoveredDriver ? payload.filter((pld: any) => pld.dataKey === hoveredDriver) : payload;
     return (
       <div className="bg-background border p-2 shadow-lg">
         <p className="font-medium">Lap {label}</p>
@@ -239,10 +184,7 @@ export function F1PositionChart({
           const time = lapEntry?.times[drv] || "";
           return (
             <div key={drv} className="flex items-center gap-2">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ background: pld.color }}
-              />
+              <span className="h-2 w-2 rounded-full" style={{ background: pld.color }} />
               <span>
                 {drv}: P{pos}
               </span>
@@ -263,9 +205,7 @@ export function F1PositionChart({
       <div className="flex justify-between">
         <div>
           <CardTitle>Driver Positions by Lap</CardTitle>
-          <CardDescription>
-            Track the positions of drivers throughout the race.
-          </CardDescription>
+          <CardDescription>Track the positions of drivers throughout the race.</CardDescription>
         </div>
         <div className="flex flex-col items-end gap-2">
           {/* Lap range selector */}
@@ -282,23 +222,14 @@ export function F1PositionChart({
           </Select>
 
           {/* Driver selector */}
-          <Select
-            value={hoveredDriver || "All"}
-            onValueChange={(val: string) =>
-              setHoveredDriver(val === "All" ? null : val)
-            }
-          >
+          <Select value={hoveredDriver || "All"} onValueChange={(val: string) => setHoveredDriver(val === "All" ? null : val)}>
             <SelectTrigger size="sm" className="w-fit">
               <SelectValue placeholder="All Drivers" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All</SelectItem>
               {Object.keys(config)
-                .sort((a, b) =>
-                  (config[a].label as string).localeCompare(
-                    config[b].label as string
-                  )
-                )
+                .sort((a, b) => (config[a].label as string).localeCompare(config[b].label as string))
                 .map((drv) => (
                   <SelectItem key={drv} value={drv}>
                     {config[drv].label}
@@ -314,10 +245,7 @@ export function F1PositionChart({
             <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
           </div>
         ) : (
-          <ChartContainer
-            config={config}
-            className="max-h-[90dvh] min-h-[60dvh] w-full"
-          >
+          <ChartContainer config={config} className="max-h-[90dvh] min-h-[60dvh] w-full">
             <LineChart data={displayedData}>
               <CartesianGrid strokeDasharray="3" />
               <XAxis dataKey="lap" padding={{ left: 2, right: 2 }} />
@@ -344,9 +272,7 @@ export function F1PositionChart({
                     const { key, ...rest } = dotProps;
                     return <CustomDot key={key} {...rest} />;
                   }}
-                  onClick={() =>
-                    setHoveredDriver(hoveredDriver === drv ? null : drv)
-                  }
+                  onClick={() => setHoveredDriver(hoveredDriver === drv ? null : drv)}
                   opacity={hoveredDriver && hoveredDriver !== drv ? 0.2 : 1}
                 >
                   <LabelList
@@ -354,12 +280,7 @@ export function F1PositionChart({
                       const lap = chartData[props.index]?.lap;
                       if (lap !== minLap) return null;
                       return (
-                        <text
-                          x={(props.x ?? 0) - 8}
-                          y={props.y ?? 0}
-                          fill={config[drv].color}
-                          textAnchor="end"
-                        >
+                        <text x={(props.x ?? 0) - 8} y={props.y ?? 0} fill={config[drv].color} textAnchor="end">
                           {config[drv].label}
                         </text>
                       );
@@ -370,12 +291,7 @@ export function F1PositionChart({
                       const lap = chartData[props.index]?.lap;
                       if (lap !== maxLap) return null;
                       return (
-                        <text
-                          x={(props.x ?? 0) + 8}
-                          y={props.y ?? 0}
-                          fill={config[drv].color}
-                          textAnchor="start"
-                        >
+                        <text x={(props.x ?? 0) + 8} y={props.y ?? 0} fill={config[drv].color} textAnchor="start">
                           {config[drv].label}
                         </text>
                       );

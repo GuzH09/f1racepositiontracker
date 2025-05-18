@@ -10,9 +10,7 @@ export default async function Home() {
     },
   });
   const data = await res.json();
-  const seasons = data.MRData.SeasonTable.Seasons.map(
-    (s: any) => s.season
-  ).reverse();
+  const seasons = data.MRData.SeasonTable.Seasons.map((s: any) => s.season).reverse();
 
   return (
     <main className="container mx-auto px-4 py-4">

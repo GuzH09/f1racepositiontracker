@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { F1PositionChart } from "@/components/f1-position-chart";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface YearRaceSelectorProps {
   seasons: string[];
@@ -71,10 +65,7 @@ export default function YearRaceSelector({ seasons }: YearRaceSelectorProps) {
           <label htmlFor="year" className="text-sm font-medium">
             Year
           </label>
-          <Select
-            value={selectedYear}
-            onValueChange={(value: string) => setSelectedYear(value)}
-          >
+          <Select value={selectedYear} onValueChange={(value: string) => setSelectedYear(value)}>
             <SelectTrigger
               id="year"
               className="mt-1 w-[100px] rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200"
@@ -95,11 +86,7 @@ export default function YearRaceSelector({ seasons }: YearRaceSelectorProps) {
           <label htmlFor="race" className="text-sm font-medium">
             Race
           </label>
-          <Select
-            value={selectedRace}
-            onValueChange={(value: string) => setSelectedRace(value)}
-            disabled={!selectedYear}
-          >
+          <Select value={selectedRace} onValueChange={(value: string) => setSelectedRace(value)} disabled={!selectedYear}>
             <SelectTrigger
               id="race"
               className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200"
@@ -117,13 +104,7 @@ export default function YearRaceSelector({ seasons }: YearRaceSelectorProps) {
         </div>
       </div>
 
-      {selectedYear && selectedRace && (
-        <F1PositionChart
-          year={selectedYear}
-          round={selectedRace}
-          teamColors={teamColors}
-        />
-      )}
+      {selectedYear && selectedRace && <F1PositionChart year={selectedYear} round={selectedRace} teamColors={teamColors} />}
     </>
   );
 }

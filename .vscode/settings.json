@@ -1,15 +1,8 @@
 {
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.rulers": [150],
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "never",
     "source.fixAll": "always"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }
