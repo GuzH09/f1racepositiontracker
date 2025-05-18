@@ -54,6 +54,7 @@ export default [
         "@typescript-eslint/require-await": "off",
         "@typescript-eslint/no-floating-promises": "off",
         "@typescript-eslint/no-confusing-void-expression": "off",
+        "@typescript-eslint/single-quote": "off",
         "@typescript-eslint/no-unused-vars": [
           "warn",
           {
@@ -78,7 +79,7 @@ export default [
             trailingComma: "all",
             tabWidth: 2,
             semi: true,
-            singleQuote: true,
+            singleQuote: false,
             useTabs: false,
             plugins: ["prettier-plugin-tailwindcss"],
           },

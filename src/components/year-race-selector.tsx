@@ -29,9 +29,7 @@ export default function YearRaceSelector({ seasons }: YearRaceSelectorProps) {
     async function fetchRaces() {
       try {
         // Fetch all races from the selected year
-        const res = await fetch(
-          `https://api.jolpi.ca/ergast/f1/${selectedYear}/races/?limit=100`
-        );
+        const res = await fetch(`/api/races/${selectedYear}`);
         const data = await res.json();
 
         const racesList: Race[] = data.MRData.RaceTable.Races.map((r: any) => ({
@@ -68,7 +66,7 @@ export default function YearRaceSelector({ seasons }: YearRaceSelectorProps) {
 
   return (
     <>
-      <div className="flex gap-2 mb-2">
+      <div className="mb-2 flex gap-2">
         <div>
           <label htmlFor="year" className="text-sm font-medium">
             Year
@@ -79,7 +77,7 @@ export default function YearRaceSelector({ seasons }: YearRaceSelectorProps) {
           >
             <SelectTrigger
               id="year"
-              className="mt-1 w-[100px] rounded-md border-gray-300 shadow-sm focus:ring focus:ring-indigo-200 focus:border-indigo-300"
+              className="mt-1 w-[100px] rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200"
             >
               <SelectValue placeholder="Year" />
             </SelectTrigger>
@@ -104,7 +102,7 @@ export default function YearRaceSelector({ seasons }: YearRaceSelectorProps) {
           >
             <SelectTrigger
               id="race"
-              className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:ring focus:ring-indigo-200 focus:border-indigo-300"
+              className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200"
             >
               <SelectValue placeholder="Select race" />
             </SelectTrigger>

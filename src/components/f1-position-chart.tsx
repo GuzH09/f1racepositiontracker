@@ -96,9 +96,7 @@ export function F1PositionChart({
       if (!year || !round) return;
       try {
         // 1) Qualifying for Lap 0
-        const qRes = await fetch(
-          `https://api.jolpi.ca/ergast/f1/${year}/${round}/qualifying/`
-        );
+        const qRes = await fetch(`/api/qualifying/${year}/${round}`);
         const qJson = await qRes.json();
         const qualifying =
           qJson.MRData.RaceTable.Races[0]?.QualifyingResults || [];
@@ -131,7 +129,7 @@ export function F1PositionChart({
         // 2) Paginated laps (throttled)
         const limit = 100;
         const initRes = await fetch(
-          `https://api.jolpi.ca/ergast/f1/${year}/${round}/laps/?limit=${limit}`
+          `/api/laps/${year}/${round}?limit=${limit}`
         );
         const initJson = await initRes.json();
         const total = parseInt(initJson.MRData.total, 10);
@@ -140,7 +138,7 @@ export function F1PositionChart({
         for (let i = 0; i < pages; i++) {
           const offset = i * limit;
           const res = await fetch(
-            `https://api.jolpi.ca/ergast/f1/${year}/${round}/laps/?limit=${limit}&offset=${offset}`
+            `/api/laps/${year}/${round}?limit=${limit}&offset=${offset}`
           );
           const data = await res.json();
           allLaps.push(...(data.MRData.RaceTable.Races[0]?.Laps || []));
@@ -242,13 +240,13 @@ export function F1PositionChart({
           return (
             <div key={drv} className="flex items-center gap-2">
               <span
-                className="w-2 h-2 rounded-full"
+                className="h-2 w-2 rounded-full"
                 style={{ background: pld.color }}
               />
               <span>
                 {drv}: P{pos}
               </span>
-              <small className="text-xs text-muted-foreground">{time}</small>
+              <small className="text-muted-foreground text-xs">{time}</small>
             </div>
           );
         })}
@@ -269,7 +267,7 @@ export function F1PositionChart({
             Track the positions of drivers throughout the race.
           </CardDescription>
         </div>
-        <div className="flex flex-col gap-2 items-end">
+        <div className="flex flex-col items-end gap-2">
           {/* Lap range selector */}
           <Select value={selectedRange} onValueChange={setSelectedRange}>
             <SelectTrigger size="sm" className="w-fit">
@@ -313,12 +311,12 @@ export function F1PositionChart({
       <div>
         {loading ? (
           <div className="flex min-h-[66dvh] items-center justify-center">
-            <Loader2 className="animate-spin h-8 w-8 text-muted-foreground" />
+            <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
           </div>
         ) : (
           <ChartContainer
             config={config}
-            className="min-h-[60dvh] max-h-[90dvh] w-full"
+            className="max-h-[90dvh] min-h-[60dvh] w-full"
           >
             <LineChart data={displayedData}>
               <CartesianGrid strokeDasharray="3" />
