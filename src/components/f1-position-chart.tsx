@@ -24,6 +24,13 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 // Assign colors for drivers
 const colors = [
@@ -52,9 +59,11 @@ const colors = [
 export function F1PositionChart({
   year,
   round,
+  teamColors = {},
 }: {
   year: string;
   round: string;
+  teamColors?: Record<string, string>;
 }) {
   const [chartData, setChartData] = useState<
     ({ lap: number; times: Record<string, string> } & Record<string, number>)[]
@@ -64,6 +73,22 @@ export function F1PositionChart({
     Record<string, { label: string; color: string }>
   >({});
   const [hoveredDriver, setHoveredDriver] = useState<string | null>(null);
+  const [selectedRange, setSelectedRange] = useState<string>("All");
+  const displayedData = useMemo(() => {
+    if (!chartData.length) return [];
+    const total = chartData.length;
+    const segment = Math.ceil(total / 3);
+    switch (selectedRange) {
+      case "First third":
+        return chartData.slice(0, segment);
+      case "Second third":
+        return chartData.slice(segment, segment * 2);
+      case "Last third":
+        return chartData.slice(segment * 2);
+      default:
+        return chartData;
+    }
+  }, [chartData, selectedRange]);
 
   useEffect(() => {
     async function loadData() {
@@ -90,9 +115,10 @@ export function F1PositionChart({
         qualifying.forEach((r: any, i: number) => {
           const id = r.Driver.driverId;
           const code = r.Driver.code;
-          // store mapping and color
+          const teamId = r.Constructor.constructorId;
+          // store mapping and color by team (fallback to static colors)
           codeMap[id] = code;
-          colorMap[code] = colors[i % colors.length];
+          colorMap[code] = teamColors[teamId] || colors[i % colors.length];
           // starting position (Lap 0)
           rawRecords.push({
             driver: code,
@@ -167,7 +193,7 @@ export function F1PositionChart({
       }
     }
     loadData();
-  }, [year, round]);
+  }, [year, round, teamColors]);
 
   // determine last lap per driver for retirement markers
   const retireLaps = useMemo(() => {
@@ -235,14 +261,29 @@ export function F1PositionChart({
   const maxLap = chartData[chartData.length - 1]?.lap;
 
   return (
-    <Card className="py-4">
-      <CardHeader>
-        <CardTitle>Driver Positions by Lap</CardTitle>
-        <CardDescription>
-          Track the positions of drivers throughout the race.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <>
+      <div className="flex justify-between">
+        <div>
+          <CardTitle>Driver Positions by Lap</CardTitle>
+          <CardDescription>
+            Track the positions of drivers throughout the race.
+          </CardDescription>
+        </div>
+        <div className="">
+          <Select value={selectedRange} onValueChange={setSelectedRange}>
+            <SelectTrigger size="sm" className="w-fit">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="First third">First third</SelectItem>
+              <SelectItem value="Second third">Second third</SelectItem>
+              <SelectItem value="Last third">Last third</SelectItem>
+              <SelectItem value="All">All</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div>
         {loading ? (
           <div className="flex min-h-[66dvh] items-center justify-center">
             <Loader2 className="animate-spin h-8 w-8 text-muted-foreground" />
@@ -250,14 +291,22 @@ export function F1PositionChart({
         ) : (
           <ChartContainer
             config={config}
-            className="min-h-[60dvh] max-h-[66dvh] w-full"
+            className="min-h-[60dvh] max-h-[90dvh] w-full"
           >
-            <LineChart data={chartData}>
+            <LineChart data={displayedData}>
               <CartesianGrid strokeDasharray="3" />
               <XAxis dataKey="lap" padding={{ left: 2, right: 2 }} />
               <YAxis domain={[1, 20]} reversed={true} hide={true} />
               <ChartTooltip content={<CustomTooltip />} />
-              <Legend verticalAlign="top" height={30} />
+              <Legend
+                verticalAlign="top"
+                align="center"
+                height={70}
+                wrapperStyle={{
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              />
               {Object.keys(config).map((drv) => (
                 <Line
                   key={drv}
@@ -270,7 +319,6 @@ export function F1PositionChart({
                     const { key, ...rest } = dotProps;
                     return <CustomDot key={key} {...rest} />;
                   }}
-                  // Set hovered to the driver or opposite of hovered
                   onClick={() =>
                     setHoveredDriver(hoveredDriver === drv ? null : drv)
                   }
@@ -313,7 +361,7 @@ export function F1PositionChart({
             </LineChart>
           </ChartContainer>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </>
   );
 }
