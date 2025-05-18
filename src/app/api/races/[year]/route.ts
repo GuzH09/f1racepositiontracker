@@ -1,4 +1,4 @@
-export const revalidate = 7 * 24 * 60 * 60;
+export const revalidate = 604800;
 
 import { NextResponse } from "next/server";
 
