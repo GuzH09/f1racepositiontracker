@@ -11,7 +11,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ yea
   if (offset) {
     url += `&offset=${offset}`;
   }
-  const res = await fetch(url, { next: { revalidate } });
+  const res = await fetch(url, { cache: "force-cache", next: { revalidate } });
   const data = await res.json();
   return NextResponse.json(data);
 }
