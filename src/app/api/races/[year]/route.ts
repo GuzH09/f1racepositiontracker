@@ -10,5 +10,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const res = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/races/?limit=100`, { next: { revalidate } });
   const data = await res.json();
 
-  return NextResponse.json(data);
+  return NextResponse.json(data, {
+    headers: {
+      "Cache-Control": `public, s-maxage=${revalidate}, stale-while-revalidate=3600`,
+    },
+  });
 }

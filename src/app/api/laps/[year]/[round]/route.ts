@@ -17,5 +17,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const res = await fetch(url, { next: { revalidate } });
   const data = await res.json();
 
-  return NextResponse.json(data);
+  return NextResponse.json(data, {
+    headers: {
+      // s-maxage is what Vercel’s CDN uses, stale-while-revalidate lets you serve
+      // stale data while a background refresh is happening
+      "Cache-Control": `public, s-maxage=${revalidate}, stale-while-revalidate=3600`,
+    },
+  });
 }
