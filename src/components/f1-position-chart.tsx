@@ -1,10 +1,10 @@
 "use client";
 import type React from "react";
-import { useEffect, useState, useRef, useMemo } from "react";
-import { Line, LineChart, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, LabelList } from "recharts";
+import { useEffect, useState, useMemo } from "react";
+import { Line, LineChart, XAxis, YAxis, CartesianGrid, Legend, LabelList } from "recharts";
 import { Loader2 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { CardDescription, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 // Assign colors for drivers
@@ -237,13 +237,13 @@ export function F1PositionChart({ year, round, teamColors = {} }: { year: string
           </Select>
         </div>
       </div>
-      <div>
+      <div className="flex flex-grow items-center justify-center">
         {loading ? (
-          <div className="flex min-h-[66dvh] items-center justify-center">
+          <div>
             <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
           </div>
         ) : (
-          <ChartContainer config={config} className="max-h-[90dvh] min-h-[60dvh] w-full">
+          <ChartContainer config={config} className="aspect-auto h-full w-full">
             <LineChart data={displayedData}>
               <CartesianGrid strokeDasharray="3" />
               <XAxis dataKey="lap" padding={{ left: 2, right: 2 }} />

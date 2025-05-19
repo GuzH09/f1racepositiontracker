@@ -13,6 +13,19 @@ interface Race {
   raceName: string;
 }
 
+const teamColors = {
+  mercedes: "#00A19B", // Tiffany Green
+  ferrari: "#EF1A2D", // Ferrari Red
+  mclaren: "#FF8700", // McLaren Orange
+  alpine: "#479fc4", // Alpine Blue
+  haas: "#9e9e9e", // Haas Gray
+  williams: "#00A0DD", // Williams Blue
+  aston_martin: "#006F62", // Aston Martin Green
+  red_bull: "#2c4991", // Red Bull Yellow
+  rb: "#ffffff", // Alias for Red Bull
+  sauber: "#1c8f18", // Kick Green
+};
+
 export default function YearRaceSelector({ seasons }: YearRaceSelectorProps) {
   const defaultYear = seasons[0];
   const [selectedYear, setSelectedYear] = useState<string>(defaultYear);
@@ -44,19 +57,6 @@ export default function YearRaceSelector({ seasons }: YearRaceSelectorProps) {
       fetchRaces();
     }
   }, [selectedYear]);
-
-  const teamColors = {
-    mercedes: "#00A19B", // Tiffany Green
-    ferrari: "#EF1A2D", // Ferrari Red
-    mclaren: "#FF8700", // McLaren Orange
-    alpine: "#479fc4", // Alpine Blue
-    haas: "#9e9e9e", // Haas Gray
-    williams: "#00A0DD", // Williams Blue
-    aston_martin: "#006F62", // Aston Martin Green
-    red_bull: "#2c4991", // Red Bull Yellow
-    rb: "#ffffff", // Alias for Red Bull
-    sauber: "#1c8f18", // Kick Green
-  };
 
   return (
     <>
