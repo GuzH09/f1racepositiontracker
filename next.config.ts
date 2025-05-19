@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
     reactCompiler: true,
     viewTransition: true,
   },
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
 };
 
 export default nextConfig;
