@@ -4,7 +4,7 @@ export const revalidate = 604800;
 export const fetchCache = "force-cache";
 export const dynamicParams = true;
 
-export async function GET(request: NextRequest, { params }: { params: { year: string; round: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ year: string; round: string }> }) {
   const { year, round } = await params;
   const urlObj = request.nextUrl;
   const limit = urlObj.searchParams.get("limit") || "100";
