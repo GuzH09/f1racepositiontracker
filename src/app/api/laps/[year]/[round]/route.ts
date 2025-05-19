@@ -1,6 +1,3 @@
-// 1) ensure this API runs at the Edge
-export const runtime = "edge";
-
 // 2) tell Next.js to revalidate (i.e. refresh) this at most once per week
 export const revalidate = 604800;
 
