@@ -52,7 +52,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
   const seasons = data.MRData.SeasonTable.Seasons.map((s: Season) => s.season).reverse();
 
   const year = (await searchParams).year || seasons[0] || undefined;
-  const round = (await searchParams).round || undefined;
+  const round = (await searchParams).round || "1" || undefined;
 
   return (
     <main className="container mx-auto flex flex-col px-4 py-4 lg:h-[100dvh] lg:max-h-[100dvh]">
