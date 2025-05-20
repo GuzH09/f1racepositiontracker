@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
@@ -6,7 +7,6 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "F1 Race Position Tracker - By GuzH",
   description: "F1 Race Position Tracker, Made By GuzH",
-  viewport: "width=device-width, initial-scale=1",
   keywords: ["F1", "Formula 1", "Race", "Position", "Tracker", "GuzH"],
   authors: [{ name: "Hernan Agustin Otero", url: "https://guzhotero.dev/" }],
   robots: { index: true, follow: true },
@@ -36,6 +36,11 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
