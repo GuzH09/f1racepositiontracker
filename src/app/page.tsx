@@ -1,6 +1,9 @@
 import { Card } from "@/components/ui/card";
-import YearRaceSelector from "@/components/year-race-selector";
+import YearSelector from "@/components/client/year-selector";
+import RaceSelectorWrapper from "@/components/server/race-selector-wrapper";
+import PositionChartWrapper from "@/components/server/position-chart-wrapper";
 import type { SVGProps } from "react";
+import { Suspense } from "react";
 
 const GitHub = (props: SVGProps<SVGSVGElement>) => (
   <svg width="1em" height="1em" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -34,16 +37,23 @@ const ExternalLink = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export default async function Home() {
-  // Fetch all available seasons server-side
+interface Season {
+  season: string;
+  url: string;
+}
+
+export default async function Home({ searchParams }: { searchParams: Promise<{ year: string; round: string }> }) {
   const res = await fetch("https://api.jolpi.ca/ergast/f1/seasons/?limit=100", {
-    cache: "force-cache",
     next: {
       revalidate: 7 * 24 * 60 * 60,
     },
   });
   const data = await res.json();
-  const seasons = data.MRData.SeasonTable.Seasons.map((s: any) => s.season).reverse();
+  const seasons = data.MRData.SeasonTable.Seasons.map((s: Season) => s.season).reverse();
+
+  const year = (await searchParams).year || seasons[0] || undefined;
+  const round = (await searchParams).round || undefined;
+
   return (
     <main className="container mx-auto flex flex-col px-4 py-4 lg:h-[100dvh] lg:max-h-[100dvh]">
       <div className="mb-2 flex flex-col gap-2 lg:flex-row lg:justify-between">
@@ -73,7 +83,16 @@ export default async function Home() {
         </div>
       </div>
       <Card className="flex h-[95dvh] flex-col gap-2 p-4 lg:h-auto lg:flex-grow">
-        <YearRaceSelector seasons={seasons} />
+        <div className="mb-2 flex gap-2">
+          <YearSelector seasons={seasons} year={year} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <RaceSelectorWrapper year={year} round={round} />
+          </Suspense>
+        </div>
+
+        <Suspense fallback={<div>Loading...</div>}>
+          <PositionChartWrapper year={year} round={round} />
+        </Suspense>
       </Card>
     </main>
   );
