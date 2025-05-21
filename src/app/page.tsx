@@ -66,8 +66,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
   const selectedYear = year || seasons?.[0];
   const selectedRound = round || (seasons.length > 0 ? "1" : undefined);
 
-  console.log(selectedYear, selectedRound);
-
   return (
     <main className="container mx-auto flex flex-col px-4 py-4 lg:h-[100dvh] lg:max-h-[100dvh]">
       <div className="mb-2 flex flex-col gap-2 lg:flex-row lg:justify-between">

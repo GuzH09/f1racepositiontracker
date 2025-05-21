@@ -6,8 +6,14 @@ import { CardDescription, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
+interface LapsObject {
+  lap: number;
+  times: Record<string, string>;
+  [driverCode: string]: number | Record<string, string>;
+}
+
 interface PositionChartProps {
-  laps: any[];
+  laps: LapsObject[];
   cfg: Record<string, { label: string; color: string }>;
 }
 

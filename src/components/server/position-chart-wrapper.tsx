@@ -1,9 +1,49 @@
 import { PositionChart } from "@/components/client/position-chart";
-import { Suspense } from "react";
 
 interface PositionChartWrapperProps {
   year: string | undefined;
   round: string | undefined;
+}
+
+interface AllLapsTimingObject {
+  driverId: string;
+  position: string;
+  time: string;
+}
+
+interface AllLapsObject {
+  number: string;
+  Timings: AllLapsTimingObject[];
+}
+
+interface QualifyingAPIResponse {
+  number: string;
+  position: string;
+  Driver: {
+    driverId: string;
+    permanentNumber: string;
+    code: string;
+    url: string;
+    givenName: string;
+    familyName: string;
+    dateOfBirth: string;
+    nationality: string;
+  };
+  Constructor: {
+    constructorId: string;
+    url: string;
+    name: string;
+    nationality: string;
+  };
+  Q1: string;
+  Q2: string | null;
+  Q3: string | null;
+}
+
+interface LapsObject {
+  lap: number;
+  times: Record<string, string>;
+  [driverCode: string]: number | Record<string, string>;
 }
 
 const teamColors: Record<string, string> = {
@@ -43,7 +83,7 @@ const defaultColors = [
 ];
 
 export default async function PositionChartWrapper({ year, round }: PositionChartWrapperProps) {
-  let laps: any[] = [];
+  let laps: LapsObject[] = [];
   const cfg: Record<string, { label: string; color: string }> = {};
 
   try {
@@ -71,7 +111,7 @@ export default async function PositionChartWrapper({ year, round }: PositionChar
       time: string;
     }[] = [];
 
-    qualifying.forEach((r: any, i: number) => {
+    qualifying.forEach((r: QualifyingAPIResponse, i: number) => {
       const id = r.Driver.driverId;
       const code = r.Driver.code;
       const teamId = r.Constructor.constructorId;
@@ -103,7 +143,7 @@ export default async function PositionChartWrapper({ year, round }: PositionChar
 
     const total = parseInt(rData.MRData.total, 10);
     const pages = Math.ceil(total / limit);
-    const allLaps: any[] = [];
+    const allLaps: AllLapsObject[] = [];
 
     // Paginated Laps with Offset
     for (let i = 0; i < pages; i++) {
@@ -125,7 +165,7 @@ export default async function PositionChartWrapper({ year, round }: PositionChar
     // Flatten each Timing into rawRecords using codeMap
     allLaps.forEach((lap) => {
       const lapNum = parseInt(lap.number, 10);
-      lap.Timings.forEach((t: any) => {
+      lap.Timings.forEach((t: AllLapsTimingObject) => {
         const code = codeMap[t.driverId] || t.driverId;
         rawRecords.push({
           driver: code,
@@ -141,7 +181,7 @@ export default async function PositionChartWrapper({ year, round }: PositionChar
       .sort((a, b) => a - b)
       .map((lapNum) => {
         const byLap = rawRecords.filter((r) => r.lap === lapNum);
-        const entry: any = { lap: lapNum, times: {} };
+        const entry: LapsObject = { lap: lapNum, times: {} };
         byLap.forEach((r) => {
           entry[r.driver] = r.position;
           entry.times[r.driver] = r.time;
