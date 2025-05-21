@@ -46,7 +46,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
   let seasons: string[] = [];
 
   try {
-    const res = await fetch("https://api.jolpi.ca/ergast/f11/seasons/?limit=100", {
+    const res = await fetch("https://api.jolpi.ca/ergast/f1/seasons/?limit=100", {
       next: {
         revalidate: 7 * 24 * 60 * 60,
       },
