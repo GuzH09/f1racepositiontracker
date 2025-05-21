@@ -12,7 +12,7 @@ interface PositionChartProps {
 }
 
 export function PositionChart({ laps, cfg }: PositionChartProps) {
-  const [hoveredDriver, setHoveredDriver] = useState<string | null>(null);
+  const [hoveredDriver, setHoveredDriver] = useState<string | null>();
   const [selectedRange, setSelectedRange] = useState<string>("All");
 
   const displayedData = useMemo(() => {

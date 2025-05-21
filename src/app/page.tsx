@@ -43,16 +43,30 @@ interface Season {
 }
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ year: string; round: string }> }) {
-  const res = await fetch("https://api.jolpi.ca/ergast/f1/seasons/?limit=100", {
-    next: {
-      revalidate: 7 * 24 * 60 * 60,
-    },
-  });
-  const data = await res.json();
-  const seasons = data.MRData.SeasonTable.Seasons.map((s: Season) => s.season).reverse();
+  let seasons: string[] = [];
 
-  const year = (await searchParams).year || seasons[0] || undefined;
-  const round = (await searchParams).round || "1" || undefined;
+  try {
+    const res = await fetch("https://api.jolpi.ca/ergast/f11/seasons/?limit=100", {
+      next: {
+        revalidate: 7 * 24 * 60 * 60,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Seasons fetch failed: ${res.status}`);
+    }
+
+    const data = await res.json();
+    seasons = data.MRData.SeasonTable.Seasons.map((s: Season) => s.season).reverse();
+  } catch (error) {
+    console.error(error);
+  }
+
+  const { year, round } = await searchParams;
+  const selectedYear = year || seasons?.[0];
+  const selectedRound = round || (seasons.length > 0 ? "1" : undefined);
+
+  console.log(selectedYear, selectedRound);
 
   return (
     <main className="container mx-auto flex flex-col px-4 py-4 lg:h-[100dvh] lg:max-h-[100dvh]">
@@ -84,14 +98,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
       </div>
       <Card className="flex h-[95dvh] flex-col gap-2 p-4 lg:h-auto lg:flex-grow">
         <div className="mb-2 flex gap-2">
-          <YearSelector seasons={seasons} year={year} />
+          <YearSelector seasons={seasons} year={selectedYear} />
           <Suspense fallback={<div>Loading...</div>}>
-            <RaceSelectorWrapper year={year} round={round} />
+            <RaceSelectorWrapper year={selectedYear} round={selectedRound} />
           </Suspense>
         </div>
 
         <Suspense fallback={<div>Loading...</div>}>
-          <PositionChartWrapper year={year} round={round} />
+          <PositionChartWrapper year={selectedYear} round={selectedRound} />
         </Suspense>
       </Card>
     </main>

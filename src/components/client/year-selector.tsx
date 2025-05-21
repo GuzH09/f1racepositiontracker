@@ -5,11 +5,11 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 
 interface YearSelectorProps {
   seasons: string[];
-  year: string;
+  year: string | undefined;
 }
 
 export default function YearSelector({ seasons, year }: YearSelectorProps) {
-  const [selectedYear, setSelectedYear] = useState<string>(year);
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(year);
   const router = useRouter();
 
   const handleValueChange = (value: string) => {
@@ -22,7 +22,7 @@ export default function YearSelector({ seasons, year }: YearSelectorProps) {
       <label htmlFor="year" className="text-sm font-medium">
         Year
       </label>
-      <Select value={selectedYear} onValueChange={handleValueChange}>
+      <Select value={selectedYear} onValueChange={handleValueChange} disabled={seasons.length === 0}>
         <SelectTrigger
           id="year"
           className="mt-1 w-[100px] rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200"

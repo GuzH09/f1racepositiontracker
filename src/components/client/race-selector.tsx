@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface RaceSelectorProps {
-  year: string;
+  year: string | undefined;
   round: string | undefined;
   races: Race[];
 }
@@ -15,7 +15,7 @@ interface Race {
 }
 
 export default function RaceSelector({ year, round, races }: RaceSelectorProps) {
-  const [selectedRace, setSelectedRace] = useState<string>(round || "");
+  const [selectedRace, setSelectedRace] = useState<string | undefined>(round);
   const router = useRouter();
 
   const handleValueChange = (value: string) => {
@@ -28,7 +28,7 @@ export default function RaceSelector({ year, round, races }: RaceSelectorProps) 
       <label htmlFor="race" className="text-sm font-medium">
         Race
       </label>
-      <Select value={selectedRace} onValueChange={handleValueChange} disabled={!year}>
+      <Select value={selectedRace} onValueChange={handleValueChange} disabled={!year || races.length === 0}>
         <SelectTrigger
           id="race"
           className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200"
