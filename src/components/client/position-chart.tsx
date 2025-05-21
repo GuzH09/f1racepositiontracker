@@ -98,7 +98,7 @@ export function PositionChart({ laps, cfg }: PositionChartProps) {
         <div className="flex flex-col items-end gap-2">
           {/* Lap range selector */}
           <Select value={selectedRange} onValueChange={setSelectedRange}>
-            <SelectTrigger size="sm" className="w-fit">
+            <SelectTrigger aria-label="Select lap range" size="sm" className="w-fit">
               <SelectValue placeholder="All" />
             </SelectTrigger>
             <SelectContent>
@@ -111,7 +111,7 @@ export function PositionChart({ laps, cfg }: PositionChartProps) {
 
           {/* Driver selector */}
           <Select value={hoveredDriver || "All"} onValueChange={(val: string) => setHoveredDriver(val === "All" ? null : val)}>
-            <SelectTrigger size="sm" className="w-fit">
+            <SelectTrigger aria-label="Select driver" size="sm" className="w-fit">
               <SelectValue placeholder="All Drivers" />
             </SelectTrigger>
             <SelectContent>
